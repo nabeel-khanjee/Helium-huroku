@@ -4,11 +4,13 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
 const ValidateRegisterInput = require("../validation/register");
 const ValidateLoginInput = require("../validation/login");
+const {protect} = require("../middlewares/auth");
 
 // User Sign Up
 router.post("/register", asyncHandler(async(req,res)=>{
      //Validation 
   const { errors, isValid } = ValidateRegisterInput(req.body);
+  //console.log(error);
   if (!isValid) {
     let errorMsg = Object.keys(errors);
     return res.render("registration", {errorMsg});
@@ -88,16 +90,9 @@ router.get("/logout", asyncHandler(async(req,res)=>{
 }))
 
 //Delete Account 
-router.delete("/:id", asyncHandler(async(req,res)=>{
-  await User.findByIdAndRemove(req.params.id)
-    .then(()=> {
-      if(req.cookies.token) {
-        res.clearCookie("token");
-        return res.redirect("/");
-      }
-      return res.redirect("/");
-    })
-    .catch((err)=> console.log(err));
+router.delete("/deleteaccount", protect, asyncHandler(async(req,res)=>{
+  await User.findByIdAndRemove(req.user._id);
+  res.redirect("/");
 }))
 
 module.exports = router;
